@@ -3,13 +3,23 @@ name: Publicar desafío diario
 on:
   schedule:
     - cron: "0 13 * * *"
-  workflow_dispatch: {}
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Modo a ejecutar manualmente'
+        required: true
+        default: 'publish'
+        type: choice
+        options:
+          - publish
+          - reveal
 
 permissions:
   contents: write
 
 jobs:
-  publicar:
+  ejecutar:
     runs-on: ubuntu-latest
     steps:
       - name: Descargar el repositorio
@@ -23,11 +33,23 @@ jobs:
       - name: Instalar dependencias
         run: npm install
 
+      - name: Determinar modo (publish o reveal)
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=${{ github.event.inputs.mode }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 13 * * *" ]; then
+            echo "mode=publish" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=reveal" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Ejecutar el bot
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
           POLL_DURATION_HOURS: "12"
+          MODE: ${{ steps.mode.outputs.mode }}
         run: node index.js
 
       - name: Guardar cambios (queue.csv / state.json)
