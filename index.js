@@ -75,7 +75,7 @@ async function revealPreviousAnswer(client, state) {
   const { channelId, answer } = state.pending;
   try {
     const channel = await client.channels.fetch(channelId);
-    await channel.send(`📊 ¡La encuesta de hoy terminó! La alternativa correcta era **${answer}**.`);
+    await channel.send(`📊 ¡La encuesta terminó! La alternativa correcta era **${answer}**.`);
   } catch (err) {
     console.error('No se pudo enviar la respuesta correcta del desafío anterior:', err);
   }
@@ -132,28 +132,29 @@ async function postNextChallenge(client) {
   console.log(`Desafío publicado (${next.image}). Respuesta correcta guardada: ${next.answer}`);
 }
 
-async function dailyJob(client) {
-  const state = loadState();
-  // Primero revela la respuesta del desafío anterior (si quedó uno pendiente)
-  await revealPreviousAnswer(client, state);
-  // Luego publica el desafío de hoy
-  await postNextChallenge(client);
-}
-
 // ---------- arranque del bot: corre una sola vez y se cierra ----------
 // El horario ya no lo controla este script, lo controla el "schedule" del
 // workflow de GitHub Actions (ver .github/workflows/daily.yml).
+// MODE=publish  -> publica el desafío del día + abre la encuesta
+// MODE=reveal   -> solo anuncia la respuesta correcta de la encuesta pendiente
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.once('ready', async () => {
   console.log(`Bot conectado como ${client.user.tag}`);
 
+  const mode = (process.env.MODE || 'publish').toLowerCase();
+
   try {
-    await dailyJob(client);
-    console.log('Job diario completado con éxito.');
+    if (mode === 'reveal') {
+      const state = loadState();
+      await revealPreviousAnswer(client, state);
+    } else {
+      await postNextChallenge(client);
+    }
+    console.log(`Modo "${mode}" completado con éxito.`);
   } catch (err) {
-    console.error('Error en el job diario:', err);
+    console.error(`Error en modo "${mode}":`, err);
     process.exitCode = 1;
   } finally {
     client.destroy();
