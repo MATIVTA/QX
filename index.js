@@ -75,7 +75,7 @@ async function revealPreviousAnswer(client, state) {
   const { channelId, answer } = state.pending;
   try {
     const channel = await client.channels.fetch(channelId);
-    await channel.send(`📊 ¡La encuesta de ayer terminó! La alternativa correcta era **${answer}**.`);
+    await channel.send(`📊 ¡La encuesta de hoy terminó! La alternativa correcta era **${answer}**.`);
   } catch (err) {
     console.error('No se pudo enviar la respuesta correcta del desafío anterior:', err);
   }
