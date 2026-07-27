@@ -2,7 +2,7 @@ name: Publicar desafío diario
 
 on:
   schedule:
-    - cron: "0 14 * * *"
+    - cron: "0 13 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -27,7 +27,7 @@ jobs:
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
-          POLL_DURATION_HOURS: "24"
+          POLL_DURATION_HOURS: "12"
         run: node index.js
 
       - name: Guardar cambios (queue.csv / state.json)
